@@ -3,7 +3,7 @@
 A full-stack serverless application that automatically extracts text from PDF documents using AWS Textract, indexes them in Elasticsearch, and provides a React-based search interface with highlighted snippets.
 
 
-## 🎯 Features
+## Features
 
 - **Automated PDF Processing**: Upload PDFs to S3 and they're automatically processed via AWS Textract
 - **Full-Text Search**: Query across all indexed documents with Elasticsearch
@@ -12,7 +12,7 @@ A full-stack serverless application that automatically extracts text from PDF do
 - **Serverless Architecture**: Pay only for what you use with Lambda and managed services
 - **React Frontend**: Clean, responsive search interface
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────┐      ┌──────────────┐      ┌─────────────┐
