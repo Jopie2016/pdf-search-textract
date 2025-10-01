@@ -1,0 +1,69 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+lambda/ingest/certifi/
+lambda/ingest/certifi-*/
+lambda/ingest/charset_normalizer/
+lambda/ingest/charset_normalizer-*/
+lambda/ingest/idna/
+lambda/ingest/idna-*/
+lambda/ingest/urllib3/
+lambda/ingest/urllib3-*/
+lambda/ingest/requests/
+lambda/ingest/requests-*/
+lambda/search/certifi/
+lambda/search/certifi-*/
+lambda/search/charset_normalizer/
+lambda/search/charset_normalizer-*/
+lambda/search/idna/
+lambda/search/idna-*/
+lambda/search/urllib3/
+lambda/search/urllib3-*/
+lambda/search/requests/
+lambda/search/requests-*/
+*.dist-info/
+
+# React / Node
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Secrets
+*.pem
+*.key
+credentials.json
+.env
+
+# PDFs (don't commit actual PDF files)
+*.pdf
+search_demo_files/
