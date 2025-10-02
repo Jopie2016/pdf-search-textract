@@ -11,8 +11,8 @@ s3 = boto3.client("s3")
 textract = boto3.client("textract")
 
 # Elasticsearch connection (Terraform passes ES_HOST via env var)
-ES_HOST = os.environ["ES_HOST"]               # e.g., http://<EC2-IP>:9200
-INDEX = os.environ.get("INDEX", "pdfs")       # default index = "pdfs"
+ES_HOST = os.environ["ES_HOST"]               
+INDEX = os.environ.get("INDEX", "pdfs")       
 
 
 def lambda_handler(event, context):
@@ -34,15 +34,15 @@ def lambda_handler(event, context):
         # 1. Start Textract async job
         job_id = start_textract_job(bucket, key)
         if not job_id:
-            print(f"❌ Could not start Textract for {key}")
+            print(f" Could not start Textract for {key}")
             continue
 
         # 2. Poll for results
         pages = get_textract_results(job_id)
-        print(f"✅ Textract completed: {len(pages)} pages extracted from {key}")
+        print(f" Textract completed: {len(pages)} pages extracted from {key}")
 
         if not pages:
-            print(f"⚠️ No text extracted from {key}")
+            print(f" No text extracted from {key}")
             continue
 
         # 3. Prepare bulk payload for Elasticsearch
@@ -74,7 +74,7 @@ def start_textract_job(bucket, key):
         )
         return response["JobId"]
     except Exception as e:
-        print(f"❌ Textract start failed for {key}: {e}")
+        print(f" Textract start failed for {key}: {e}")
         return None
 
 
@@ -103,11 +103,11 @@ def get_textract_results(job_id):
             break
 
         elif status in ["FAILED", "PARTIAL_SUCCESS"]:
-            print(f"❌ Textract job {job_id} ended with status: {status}")
+            print(f" Textract job {job_id} ended with status: {status}")
             break
 
         else:
-            print(f"⏳ Textract job {job_id} still running...")
+            print(f" Textract job {job_id} still running...")
             time.sleep(5)
 
     return pages
@@ -146,16 +146,16 @@ def bulk_index(payload, filename, page_count, retries=3, delay=2):
             if res.status_code == 200:
                 result = res.json()
                 if result.get("errors"):
-                    print(f"⚠️ Bulk indexing for {filename} had errors: {result}")
+                    print(f" Bulk indexing for {filename} had errors: {result}")
                 else:
-                    print(f"✅ Bulk indexed {page_count} pages from {filename}")
+                    print(f" Bulk indexed {page_count} pages from {filename}")
                 return
             else:
-                print(f"⚠️ Attempt {attempt}: ES returned {res.status_code} {res.text}")
+                print(f" Attempt {attempt}: ES returned {res.status_code} {res.text}")
 
         except RequestException as e:
-            print(f"⚠️ Attempt {attempt}: Request failed: {e}")
+            print(f" Attempt {attempt}: Request failed: {e}")
 
         time.sleep(delay)
 
-    print(f"❌ Bulk indexing failed for {filename} after {retries} retries")
+    print(f" Bulk indexing failed for {filename} after {retries} retries")
