@@ -3,12 +3,11 @@ import json
 import requests
 from urllib.parse import quote
 
-ES_HOST = os.environ["ES_HOST"]   # e.g. http://<EC2-IP>:9200
+ES_HOST = os.environ["ES_HOST"]   
 INDEX = os.environ.get("INDEX", "pdfs")
-CLOUDFRONT_DOMAIN = os.environ.get("CLOUDFRONT_DOMAIN")  # from Terraform
+CLOUDFRONT_DOMAIN = os.environ.get("CLOUDFRONT_DOMAIN")  # from Terraform 
 
 def lambda_handler(event, context):
-    # Support API Gateway v1 & v2 events
     if "queryStringParameters" in event:
         params = event["queryStringParameters"] or {}
         query = params.get("q", "")
