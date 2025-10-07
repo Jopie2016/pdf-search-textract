@@ -107,6 +107,22 @@ resource "aws_security_group" "es_sg" {
   }
 }
 
+resource "aws_ebs_volume" "es_data" {
+  availability_zone = aws_instance.es.availability_zone
+  size              = 20  # 20GB for Elasticsearch data
+  type              = "gp3"
+
+  tags = {
+    Name = "elasticsearch-data-${random_id.suffix.hex}"
+  }
+}
+
+resource "aws_volume_attachment" "es_data_attach" {
+  device_name = "/dev/xvdf"
+  volume_id   = aws_ebs_volume.es_data.id
+  instance_id = aws_instance.es.id
+}
+
 resource "aws_instance" "es" {
   ami                         = data.aws_ami.al2.id
   instance_type               = var.es_instance_type
@@ -118,12 +134,37 @@ resource "aws_instance" "es" {
   user_data = <<-EOF
     #!/bin/bash
     set -e
+
+    # Install Java and Elasticsearch
     yum update -y
     amazon-linux-extras install java-openjdk11 -y
     curl -L -o /tmp/elasticsearch.rpm https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-7.17.9-x86_64.rpm
     rpm -ivh /tmp/elasticsearch.rpm
+
+    # Wait for EBS volume to attach
+    while [ ! -e /dev/xvdf ]; do sleep 1; done
+
+    # Format EBS volume if not already formatted
+    if ! blkid /dev/xvdf; then
+      mkfs -t ext4 /dev/xvdf
+    fi
+
+    # Create mount point and mount EBS volume
+    mkdir -p /var/lib/elasticsearch
+    mount /dev/xvdf /var/lib/elasticsearch
+
+    # Add to fstab for auto-mount on reboot
+    echo "/dev/xvdf /var/lib/elasticsearch ext4 defaults,nofail 0 2" >> /etc/fstab
+
+    # Set ownership for Elasticsearch
+    chown -R elasticsearch:elasticsearch /var/lib/elasticsearch
+
+    # Configure Elasticsearch
     echo "discovery.type: single-node" >> /etc/elasticsearch/elasticsearch.yml
     echo "network.host: 0.0.0.0" >> /etc/elasticsearch/elasticsearch.yml
+    echo "path.data: /var/lib/elasticsearch" >> /etc/elasticsearch/elasticsearch.yml
+
+    # Start Elasticsearch
     systemctl enable elasticsearch
     systemctl start elasticsearch
   EOF

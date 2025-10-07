@@ -12,16 +12,25 @@ def lambda_handler(event, context):
     if "queryStringParameters" in event:
         params = event["queryStringParameters"] or {}
         query = params.get("q", "")
+        page = int(params.get("page", 1))  # Default to page 1
     elif "rawQueryString" in event:
         query = event["rawQueryString"].split("=")[-1]
+        page = 1
     else:
         query = ""
+        page = 1
 
     if not query:
         return respond(400, {"error": "Missing query parameter q"})
 
-    # Elasticsearch query with highlighting
+    # Pagination settings
+    page_size = 20  # Results per page
+    from_index = (page - 1) * page_size  # Skip previous pages
+
+    # Elasticsearch query with highlighting and pagination
     es_query = {
+        "from": from_index,
+        "size": page_size,
         "query": {
             "multi_match": {
                 "query": query,
@@ -48,7 +57,9 @@ def lambda_handler(event, context):
             timeout=10
         )
         res.raise_for_status()
-        hits = res.json().get("hits", {}).get("hits", [])
+        response_data = res.json()
+        hits = response_data.get("hits", {}).get("hits", [])
+        total_hits = response_data.get("hits", {}).get("total", {}).get("value", 0)
     except Exception as e:
         return respond(500, {"error": f"Search request failed: {str(e)}"})
 
@@ -74,7 +85,20 @@ def lambda_handler(event, context):
             "url": pdf_url
         })
 
-    return respond(200, {"results": results})
+    # Calculate pagination info
+    total_pages = (total_hits + page_size - 1) // page_size  # Round up
+
+    return respond(200, {
+        "results": results,
+        "pagination": {
+            "current_page": page,
+            "page_size": page_size,
+            "total_results": total_hits,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1
+        }
+    })
 
 
 def respond(status, body):
