@@ -1,0 +1,22 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/semgrep/semgrep
+    rev: v1.142.0
+    hooks:
+      - id: semgrep
+        name: semgrep security audit
+        args: [--config=p/security-audit, --error]
+        # Skip vendored/build/virtualenv dirs to keep hooks fast & quiet
+        exclude: |
+          (?x)^(
+            node_modules/|
+            dist/|
+            build/|
+            .venv/|
+            venv/|
+            .mypy_cache/|
+            __pycache__/|
+            .git/|
+            .idea/|
+            .vscode/
+          )
